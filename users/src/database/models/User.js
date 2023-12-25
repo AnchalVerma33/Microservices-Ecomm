@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-console.log("HELLO")
 
 const userSchema = new mongoose.Schema({
   id: {

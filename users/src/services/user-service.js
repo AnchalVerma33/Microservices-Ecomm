@@ -74,7 +74,7 @@ class UserService {
         verified: false,
       });
 
-      await this.SendOtp(email);
+      // await this.SendOtp(email);
 
       return FormatData({
         id: newUser.id,
@@ -170,11 +170,12 @@ class UserService {
 
       const otp = GenerateRandomPin(6);
 
-      const verificationLink = `http://localhost:5001/verifyOtp?email=${email}&otp=${otp}`;
+      const verificationLink = `http://localhost:4001/verifyOtp?email=${email}&otp=${otp}`;
 
       const message = `Thank you for using our Shopping App\n For Verification Click on below link : ${verificationLink}`;
+      console.log(message)
 
-      await this.mail.sendEmail(message, email);
+      // await this.mail.sendEmail(message, email);
 
       await this.redis.RedisSET(`otp_${email}`, otp, 60);
 
@@ -243,8 +244,8 @@ class UserService {
         );
         filterUpdates.password = userPassword;
       }
-
       const user = await this.repository.UpdateUserDetails(id, filterUpdates);
+      console.log(user)
       delete user.salt;
       delete user.password;
       return user;

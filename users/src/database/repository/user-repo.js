@@ -3,12 +3,12 @@ const {
   BadRequestError,
   STATUS_CODES,
 } = require("../../utils/errors/app-errors");
-const connectDB = require("../connect");
-const { User } = require("../models");
+const { UserModel } = require("../models");
+
 
 class UserRepository {
   constructor() {
-    this.User = new User().schema;
+    this.User = UserModel;
   }
 
   // SignUp
@@ -34,8 +34,9 @@ class UserRepository {
         salt,
       };
 
-      const newUser = await this.User.create(user);
-      return newUser;
+      const newUser = new this.User(user);
+      const savedUser = await newUser.save();
+      return savedUser;
     } catch (e) {
       throw new APIError(
         "API Error",
@@ -49,7 +50,7 @@ class UserRepository {
 
   async FindUserCount(filter) {
     try {
-      const count = await this.User.count({ where: filter });
+      const count = await this.User.countDocuments(filter);
       return count;
     } catch (e) {
       throw new APIError(
@@ -64,11 +65,8 @@ class UserRepository {
 
   async FindOneUser(filter) {
     try {
-      const user = await this.User.findOne({ where: filter });
-      if (!user) {
-        return null;
-      }
-      return user.dataValues;
+      const user = await this.User.findOne(filter);
+      return user;
     } catch (e) {
       throw new APIError(
         "API Error",
@@ -80,17 +78,14 @@ class UserRepository {
 
   // Update User details
 
-  async UpdateUserDetails(id, updateDetails, returnUpdatedDetails = true) {
+  async UpdateUserDetails(id, updateDetails) {
     try {
-      const [updatedCount, updatedUsers] = await this.User.update(
-        updateDetails,
-        {
-          where: { id },
-          returning: returnUpdatedDetails,
-        },
-      );
-      const user = updatedUsers[0].dataValues;
-      return user;
+     const user = await this.User.findOne({id});
+     for(let key in updateDetails){
+      user[key] = updateDetails[key];
+     }
+     const updatedUser = await user.save();
+     return updatedUser;
     } catch (e) {
       throw new APIError(
         "API Error",
@@ -102,7 +97,8 @@ class UserRepository {
 
   async DeleteUserProfile(filter) {
     try {
-      await this.User.destroy({ where: filter });
+      const user = await this.User.findOne(filter);
+      await user.deleteOne();
       return { success: true };
     } catch (e) {
       throw new APIError(
