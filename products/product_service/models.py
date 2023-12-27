@@ -1,7 +1,8 @@
-from django.db import models
+from django.db import models,transaction
 from django.core.validators import MinValueValidator
 from django.forms.models import model_to_dict
 from django.utils import timezone
+
 
 
 class Product(models.Model):
@@ -68,3 +69,56 @@ class Product(models.Model):
         if product_queryset.exists() and product_queryset.count()>0:
             return product_queryset.first().to_dict()
         return dict()
+    
+    @classmethod
+    def update_one_product(cls, productID, updated_values):
+        fields = cls.return_meta_fields() 
+        product_obj = cls.objects.get(productID=productID)
+        for key in updated_values:
+            if key in fields:
+                setattr(product_obj,key,updated_values[key])
+        product_obj.save()
+        updated_product = cls.objects.get(productID=productID)
+        return updated_product.to_dict()
+    
+    
+    @classmethod
+    def update_bulk_product(cls, updated_values_list):
+        product_ids = list()
+        products_updated_list = list()
+        fields_to_update = set()
+        fields = cls.return_meta_fields() 
+        for update_data in updated_values_list:
+            productID = update_data.get("productID")
+            if not productID:
+                continue
+            product_ids.append(productID)
+            product_obj = cls.objects.get(productID=productID)
+            for key in update_data:
+                if key in fields and key != "productID":
+                    fields_to_update.add(key)
+                    setattr(product_obj, key, update_data[key])
+
+            products_updated_list.append(product_obj)
+        print(list(fields_to_update))
+        with transaction.atomic():
+            cls.objects.bulk_update(products_updated_list,list(fields_to_update))
+        
+        new_updated_data = cls.objects.filter(productID__in=product_ids)
+        return new_updated_data.values()
+    
+    @classmethod
+    def delete_product(cls, productID):
+        product = cls.objects.get(productID=productID)
+        product.delete()
+        return {"message" : f"Product deleted for productID : {productID}"}
+            
+        
+            
+        
+            
+        
+        
+        
+    
+        

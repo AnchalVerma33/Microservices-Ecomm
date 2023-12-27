@@ -17,6 +17,20 @@ class ProductService:
     def get_one_product(self, filter):
         product = Product.get_one_product(filter)
         return product
+    
+    def update_one_product(self, productID , update_prod_data):
+        updated_data = Product.update_one_product(productID, update_prod_data)
+        return updated_data
+    
+    
+    def update_bulk_product(self, update_prod_data):
+        updated_data = Product.update_bulk_product(update_prod_data)
+        return updated_data
+    
+    def delete_product(self, productID):
+        deleted_product = Product. delete_product(productID)
+        return deleted_product
+        
         
 
 
